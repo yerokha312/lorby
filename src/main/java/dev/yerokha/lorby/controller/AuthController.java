@@ -79,7 +79,7 @@ public class AuthController {
 
     @Operation(
             summary = "Confirmation", description = "Confirm email by clicking the sent link " +
-            "(https://crazy-zam.github.io/neo-auth/auth/confirmation?ct=wo8357ghw875fhw0385f7hw3045fhw9480ygmc094yn03498ncyt93040)",
+            "(https://crazy-zam.github.io/neo-auth/auth/confirmation?ct=)",
             tags = {"authentication", "get"},
             responses = {
                     @ApiResponse(responseCode = "200", description = "Email confirmed successfully"),
