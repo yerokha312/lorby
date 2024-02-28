@@ -5,7 +5,6 @@ import dev.yerokha.lorby.entity.UserEntity;
 import dev.yerokha.lorby.enums.TokenType;
 import dev.yerokha.lorby.exception.InvalidTokenException;
 import dev.yerokha.lorby.repository.TokenRepository;
-import dev.yerokha.lorby.util.TokenEncryptionUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -21,6 +20,9 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import static dev.yerokha.lorby.util.TokenEncryptionUtil.decryptToken;
+import static dev.yerokha.lorby.util.TokenEncryptionUtil.encryptToken;
 
 @Slf4j
 @Service
@@ -40,7 +42,7 @@ public class TokenService {
     }
 
     public String generateConfirmationToken(UserEntity entity) {
-        return generateToken(entity, expirationMinutes, TokenType.CONFIRMATION);
+        return encryptToken("Bearer " + generateToken(entity, expirationMinutes, TokenType.CONFIRMATION));
     }
 
     public String generateAccessToken(UserEntity entity) {
@@ -49,7 +51,7 @@ public class TokenService {
 
     public String generateRefreshToken(UserEntity entity) {
         String token = generateToken(entity, REFRESH_TOKEN_EXPIRATION, TokenType.REFRESH);
-        String encryptedToken = TokenEncryptionUtil.encryptToken("Bearer " + token);
+        String encryptedToken = encryptToken("Bearer " + token);
         log.info("Encrypted token: " + encryptedToken);
         RefreshToken refreshToken = new RefreshToken(
                 encryptedToken,
@@ -95,9 +97,9 @@ public class TokenService {
         return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
     }
 
-    public String getUsernameFromToken(String token) {
-        return decodeToken(token).getSubject();
-    }
+//    public String getUsernameFromToken(String token) {
+//        return decodeToken(token).getSubject();
+//    }
 
     private Jwt decodeToken(String token) {
         if (!token.startsWith("Bearer ")) {
@@ -144,7 +146,7 @@ public class TokenService {
         }
 
         for (RefreshToken token : tokenList) {
-            if (refreshToken.equals(TokenEncryptionUtil.decryptToken(token.getToken()))) {
+            if (refreshToken.equals(decryptToken(token.getToken()))) {
                 return false;
             }
         }
@@ -154,5 +156,19 @@ public class TokenService {
 
     private boolean isExpired(Jwt decodedToken) {
         return Objects.requireNonNull(decodedToken.getExpiresAt()).isBefore(Instant.now());
+    }
+
+    public String confirmationTokenIsValid(String encryptedToken) {
+        String confirmationToken = decryptToken(encryptedToken);
+        Jwt decodedToken = decodeToken(confirmationToken);
+        if (!decodedToken.getClaim("tokenType").equals(TokenType.CONFIRMATION.name())) {
+            throw new InvalidTokenException("Invalid token type");
+        }
+
+        if (isExpired(decodedToken)) {
+            throw new InvalidTokenException("Confirmation link is expired");
+        }
+
+        return decodedToken.getSubject();
     }
 }

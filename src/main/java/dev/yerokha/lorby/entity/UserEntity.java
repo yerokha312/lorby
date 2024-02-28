@@ -37,7 +37,7 @@ public class UserEntity implements UserDetails {
     private String password;
 
     @Column(name = "is_enabled")
-    private boolean isEnabled = true;
+    private boolean isEnabled = false;
     @ManyToMany
     @JoinTable(
             name = "user_role_junction",
