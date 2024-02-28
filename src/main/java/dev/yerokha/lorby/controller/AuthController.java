@@ -43,9 +43,6 @@ public class AuthController {
     )
     @PostMapping("/registration")
     public ResponseEntity<String> registerUser(@Valid @RequestBody RegistrationRequest request) {
-//        log.info("Email: " + request.email());
-//        log.info("Username: " + request.username());
-//        log.info("Password: " + request.password());
         authService.createUser(request);
         return new ResponseEntity<>("Registered successfully. Confirmation link sent to your email", HttpStatus.CREATED);
     }

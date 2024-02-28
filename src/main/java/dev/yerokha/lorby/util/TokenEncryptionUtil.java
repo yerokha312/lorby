@@ -10,13 +10,20 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.Base64;
 
 @Slf4j
 public class TokenEncryptionUtil {
 
     private static final String ENCRYPTION_ALGORITHM = "AES";
-    private static final String ENCRYPTION_KEY = "aG5n7zDwNyuBy@^e";
+    private static final String ENCRYPTION_KEY = generateSecretKey(16);
+
+    public static String generateSecretKey(int length) {
+        byte[] randomBytes = new byte[length];
+        new SecureRandom().nextBytes(randomBytes);
+        return Base64.getEncoder().encodeToString(randomBytes);
+    }
 
     public static String encryptToken(String token) {
         try {
