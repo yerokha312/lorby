@@ -5,6 +5,7 @@ import dev.yerokha.lorby.dto.LoginResponse;
 import dev.yerokha.lorby.dto.RegistrationRequest;
 import dev.yerokha.lorby.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -77,12 +78,17 @@ public class AuthController {
     }
 
     @Operation(
-            summary = "Confirmation", description = "Confirm email by clicking the sent link",
+            summary = "Confirmation", description = "Confirm email by clicking the sent link " +
+            "(https://crazy-zam.github.io/neo-auth/auth/confirmation?ct=wo8357ghw875fhw0385f7hw3045fhw9480ygmc094yn03498ncyt93040)",
             tags = {"authentication", "get"},
             responses = {
                     @ApiResponse(responseCode = "200", description = "Email confirmed successfully"),
                     @ApiResponse(responseCode = "401", description = "Invalid token exception", content = @Content)
+            },
+            parameters = {
+                    @Parameter(name = "ct", description = "Encrypted token value", required = true)
             }
+
     )
     @GetMapping("/confirmation")
     public ResponseEntity<String> confirmEmail(@RequestParam("ct") String encryptedToken) {

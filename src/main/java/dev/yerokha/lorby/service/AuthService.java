@@ -31,6 +31,7 @@ public class AuthService {
     private final TokenService tokenService;
     private final AuthenticationManager authenticationManager;
     private final MailService mailService;
+    private static final String LINK = "https://crazy-zam.github.io/neo-auth/auth/confirmation";
 
     public AuthService(UserRepository userRepository,
                        RoleRepository roleRepository,
@@ -61,12 +62,11 @@ public class AuthService {
                 passwordEncoder.encode(request.password()),
                 Set.of(roleRepository.findByAuthority("USER"))
         );
-        String link = "http://localhost:8080/v1/auth/confirmation";
 
         String confirmationToken = tokenService.generateConfirmationToken(entity);
         log.info("AuthService: Encrypted token: " + confirmationToken);
         mailService.send(entity.getEmail(), "Email confirmation",
-                "Here is your confirmation link: " + link + "?ct=" + confirmationToken);
+                "Here is your confirmation link: " + LINK + "?ct=" + confirmationToken);
 
         userRepository.save(entity);
     }
