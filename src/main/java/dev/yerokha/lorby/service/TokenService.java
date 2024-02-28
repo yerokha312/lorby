@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -48,7 +49,7 @@ public class TokenService {
 
     public String generateRefreshToken(UserEntity entity) {
         String token = generateToken(entity, REFRESH_TOKEN_EXPIRATION, TokenType.REFRESH);
-        String encryptedToken = TokenEncryptionUtil.encryptToken(token);
+        String encryptedToken = TokenEncryptionUtil.encryptToken("Bearer " + token);
         log.info("Encrypted token: " + encryptedToken);
         RefreshToken refreshToken = new RefreshToken(
                 encryptedToken,
@@ -114,7 +115,7 @@ public class TokenService {
 
     public String refreshAccessToken(String refreshToken) {
         Jwt decodedToken = decodeToken(refreshToken);
-        log.info(decodedToken.getClaim("tokenType"));
+        String username = decodedToken.getSubject();
         if (!decodedToken.getClaim("tokenType").equals(TokenType.REFRESH.name())) {
             throw new InvalidTokenException("Invalid token type");
         }
@@ -123,7 +124,7 @@ public class TokenService {
             throw new InvalidTokenException("Refresh token expired");
         }
 
-        if (isRevoked(refreshToken)) {
+        if (isRevoked(refreshToken, username)) {
             throw new InvalidTokenException("Token is revoked");
         }
 
@@ -136,9 +137,19 @@ public class TokenService {
 
     }
 
-    private boolean isRevoked(String refreshToken) {
-        return tokenRepository.findByUserEntityUsername(TokenEncryptionUtil.encryptToken(refreshToken)).orElseThrow(
-                () -> new InvalidTokenException("Token not found")).isRevoked();
+    private boolean isRevoked(String refreshToken, String username) {
+        List<RefreshToken> tokenList = tokenRepository.findNotRevokedByUsername(username);
+        if (tokenList.isEmpty()) {
+            return true;
+        }
+
+        for (RefreshToken token : tokenList) {
+            if (refreshToken.equals(TokenEncryptionUtil.decryptToken(token.getToken()))) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private boolean isExpired(Jwt decodedToken) {
