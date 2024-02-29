@@ -89,8 +89,8 @@ public class AuthService {
             throw new UserAlreadyEnabledException("User has already confirmed email address");
         }
         String confirmationToken = tokenService.generateConfirmationToken(entity);
-        mailService.send(entity.getEmail(), "Email confirmation",
-                "Here is your confirmation link: " + link + "?ct=" + confirmationToken);
+        mailService.sendConfirmationEmail(entity.getEmail(),
+                link + "?ct=" + confirmationToken);
     }
 
     public LoginResponse login(LoginRequest request) {
