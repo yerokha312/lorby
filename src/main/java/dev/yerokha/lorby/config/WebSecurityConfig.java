@@ -63,8 +63,7 @@ public class WebSecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/v1/auth/**").anonymous()
-                        .requestMatchers(
-                                "/swagger-ui/**", "/v3/**").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/**").permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(converter())))

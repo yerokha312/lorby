@@ -110,6 +110,13 @@ public class AuthController {
         return new ResponseEntity<>("Confirmation link generated, email sent", HttpStatus.OK);
     }
 
+    @Operation(
+            summary = "Check presence", description = "Endpoint for pre-submit checking free username and email",
+            tags = {"authentication", "get"},
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Returns true or false")
+            }
+    )
     @GetMapping("/check-presence")
     public ResponseEntity<Boolean> checkPresence(@RequestBody String username) {
         boolean isPresent = authService.isPresentUsername(username);
