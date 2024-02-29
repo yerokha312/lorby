@@ -62,10 +62,8 @@ public class WebSecurityConfig {
                 .cors(AbstractHttpConfigurer::disable)
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/v1/auth/login", "/v1/auth/registration").anonymous()
+                        .requestMatchers("/v1/auth/**").anonymous()
                         .requestMatchers(
-                                "/v1/auth/refreshToken",
-                                "/v1/auth/confirmation**",
                                 "/swagger-ui/**", "/v3/**").permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2

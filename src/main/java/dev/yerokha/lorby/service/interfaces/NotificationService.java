@@ -1,4 +1,4 @@
-package dev.yerokha.lorby.service;
+package dev.yerokha.lorby.service.interfaces;
 
 public interface NotificationService {
 

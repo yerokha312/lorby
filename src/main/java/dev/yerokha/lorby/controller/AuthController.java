@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
 @Tag(name = "Authentication", description = "Controller for reg/login/confirmation etc")
 @RestController
 @RequestMapping("/v1/auth")
@@ -44,7 +46,7 @@ public class AuthController {
     @PostMapping("/registration")
     public ResponseEntity<String> registerUser(@Valid @RequestBody RegistrationRequest request) {
         authService.createUser(request);
-        return new ResponseEntity<>("Registered successfully. Confirmation link sent to your email", HttpStatus.CREATED);
+        return new ResponseEntity<>("Confirmation link generated, email sent", HttpStatus.CREATED);
     }
 
     @Operation(
@@ -69,7 +71,7 @@ public class AuthController {
                     @ApiResponse(responseCode = "401", description = "Invalid token exception", content = @Content)
             }
     )
-    @GetMapping("/refreshToken")
+    @GetMapping("/refresh-token")
     public ResponseEntity<String> refreshToken(@RequestBody String refreshToken) {
         return ResponseEntity.ok(authService.refreshToken(refreshToken));
     }
@@ -91,5 +93,20 @@ public class AuthController {
     public ResponseEntity<String> confirmEmail(@RequestParam("ct") String encryptedToken) {
         authService.confirmEmail(encryptedToken);
         return ResponseEntity.ok("Email is confirmed");
+    }
+
+    @Operation(
+            summary = "Resend mail", description = "Resend mail for user email verification",
+            tags = {"authentication", "post"},
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Email sent"),
+                    @ApiResponse(responseCode = "400", description = "User not found"),
+                    @ApiResponse(responseCode = "418", description = "User's email already verified")
+            }
+    )
+    @PostMapping("/resend-confirmation")
+    public ResponseEntity<String> resend(@RequestBody Map<String, String> body) {
+        authService.sendConfirmationEmail(body);
+        return new ResponseEntity<>("Confirmation link generated, email sent", HttpStatus.OK);
     }
 }

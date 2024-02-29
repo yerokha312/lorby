@@ -5,20 +5,24 @@ import dev.yerokha.lorby.dto.LoginResponse;
 import dev.yerokha.lorby.dto.RegistrationRequest;
 import dev.yerokha.lorby.entity.UserEntity;
 import dev.yerokha.lorby.exception.EmailAlreadyTakenException;
+import dev.yerokha.lorby.exception.UserAlreadyEnabledException;
 import dev.yerokha.lorby.exception.UsernameAlreadyTakenException;
 import dev.yerokha.lorby.repository.RoleRepository;
 import dev.yerokha.lorby.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
 import java.util.Set;
 
 @Service
@@ -31,7 +35,8 @@ public class AuthService {
     private final TokenService tokenService;
     private final AuthenticationManager authenticationManager;
     private final MailService mailService;
-    private static final String LINK = "https://crazy-zam.github.io/neo-auth/auth/confirmation";
+    @Value("${LINK}")
+    private String link;
 
     public AuthService(UserRepository userRepository,
                        RoleRepository roleRepository,
@@ -53,7 +58,7 @@ public class AuthService {
         }
 
         String email = request.email();
-        if (userRepository.findByEmail(email).isPresent()) {
+        if (userRepository.findByEmailIgnoreCase(email).isPresent()) {
             throw new EmailAlreadyTakenException(String.format("Email %s already taken", email));
         }
         UserEntity entity = new UserEntity(
@@ -63,12 +68,21 @@ public class AuthService {
                 Set.of(roleRepository.findByAuthority("USER"))
         );
 
-        String confirmationToken = tokenService.generateConfirmationToken(entity);
-        log.info("AuthService: Encrypted token: " + confirmationToken);
-        mailService.send(entity.getEmail(), "Email confirmation",
-                "Here is your confirmation link: " + LINK + "?ct=" + confirmationToken);
-
         userRepository.save(entity);
+
+        sendConfirmationEmail(Map.of("username", username, "email", email));
+    }
+
+    public void sendConfirmationEmail(Map<String, String> body) {
+        UserEntity entity = userRepository.findByUsernameOrEmail(
+                body.get("username"), body.get("email")).orElseThrow(() ->
+                new UsernameNotFoundException("User not found"));
+        if (entity.isEnabled()) {
+            throw new UserAlreadyEnabledException("User has already confirmed email address");
+        }
+        String confirmationToken = tokenService.generateConfirmationToken(entity);
+        mailService.send(entity.getEmail(), "Email confirmation",
+                "Here is your confirmation link: " + link + "?ct=" + confirmationToken);
     }
 
     public LoginResponse login(LoginRequest request) {
@@ -97,9 +111,7 @@ public class AuthService {
 
     @Transactional
     public void confirmEmail(String encryptedToken) {
-        log.info("AuthService: Encrypted token: " + encryptedToken);
         String username = tokenService.confirmationTokenIsValid(encryptedToken);
-        log.info("AuthService: username: " + username);
         userRepository.enableUser(username);
     }
 }

@@ -19,8 +19,12 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static dev.yerokha.lorby.util.RedisCachingUtil.containsKey;
+import static dev.yerokha.lorby.util.RedisCachingUtil.deleteKey;
+import static dev.yerokha.lorby.util.RedisCachingUtil.setValue;
 import static dev.yerokha.lorby.util.TokenEncryptionUtil.decryptToken;
 import static dev.yerokha.lorby.util.TokenEncryptionUtil.encryptToken;
 
@@ -42,7 +46,23 @@ public class TokenService {
     }
 
     public String generateConfirmationToken(UserEntity entity) {
-        return encryptToken("Bearer " + generateToken(entity, expirationMinutes, TokenType.CONFIRMATION));
+        String token = encryptToken("Bearer " + generateToken(entity, expirationMinutes, TokenType.CONFIRMATION));
+        String key = "confirmation_token:" + entity.getUsername();
+        setValue(key, token, expirationMinutes, TimeUnit.MINUTES);
+        return token;
+    }
+
+    public String confirmationTokenIsValid(String encryptedToken) {
+        String confirmationToken = decryptToken(encryptedToken);
+        Jwt decodedToken = decodeToken(confirmationToken);
+        String username = decodedToken.getSubject();
+        String key = "confirmation_token:" + username;
+        boolean isValid = containsKey(key);
+        if (!isValid) {
+            throw new InvalidTokenException("Confirmation link is expired");
+        }
+        deleteKey(key);
+        return username;
     }
 
     public String generateAccessToken(UserEntity entity) {
@@ -52,7 +72,6 @@ public class TokenService {
     public String generateRefreshToken(UserEntity entity) {
         String token = generateToken(entity, REFRESH_TOKEN_EXPIRATION, TokenType.REFRESH);
         String encryptedToken = encryptToken("Bearer " + token);
-        log.info("Encrypted token: " + encryptedToken);
         RefreshToken refreshToken = new RefreshToken(
                 encryptedToken,
                 entity,
@@ -64,16 +83,11 @@ public class TokenService {
     }
 
     private String generateToken(UserEntity entity, int expirationTime, TokenType tokenType) {
-        log.info(String.valueOf(expirationTime));
         Instant now = Instant.now();
         String scopes = getScopes(entity);
 
         JwtClaimsSet claims = getClaims(now, expirationTime, entity.getUsername(), scopes, tokenType);
-        String token = encodeToken(claims);
-
-        log.info("Generated {} token for user {}", token, entity.getUsername());
-
-        return token;
+        return encodeToken(claims);
     }
 
     private String getScopes(UserEntity entity) {
@@ -134,7 +148,6 @@ public class TokenService {
         String subject = decodedToken.getSubject();
         String scopes = decodedToken.getClaim("scopes");
         JwtClaimsSet claims = getClaims(now, ACCESS_TOKEN_EXPIRATION, subject, scopes, TokenType.ACCESS);
-        log.info("Generated new access token for user {}", subject);
         return encodeToken(claims);
 
     }
@@ -156,19 +169,5 @@ public class TokenService {
 
     private boolean isExpired(Jwt decodedToken) {
         return Objects.requireNonNull(decodedToken.getExpiresAt()).isBefore(Instant.now());
-    }
-
-    public String confirmationTokenIsValid(String encryptedToken) {
-        String confirmationToken = decryptToken(encryptedToken);
-        Jwt decodedToken = decodeToken(confirmationToken);
-        if (!decodedToken.getClaim("tokenType").equals(TokenType.CONFIRMATION.name())) {
-            throw new InvalidTokenException("Invalid token type");
-        }
-
-        if (isExpired(decodedToken)) {
-            throw new InvalidTokenException("Confirmation link is expired");
-        }
-
-        return decodedToken.getSubject();
     }
 }
