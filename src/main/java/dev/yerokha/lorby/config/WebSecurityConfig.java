@@ -48,7 +48,7 @@ public class WebSecurityConfig {
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
         corsConfiguration.setAllowCredentials(true);
-        corsConfiguration.addAllowedOrigin("https://crazy-zam.github.io**");
+        corsConfiguration.addAllowedOrigin("https://crazy-zam.github.io");
         corsConfiguration.addAllowedOrigin("http://localhost:3000");
         corsConfiguration.addAllowedHeader("*");
         corsConfiguration.addAllowedMethod("*");
@@ -65,7 +65,7 @@ public class WebSecurityConfig {
                 .cors(httpSecurityCorsConfigurer -> corsConfigurationSource())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/v1/auth/**").anonymous()
-                        .requestMatchers("/v1/auth/revoke").authenticated()
+                        .requestMatchers("/v1/auth/revoke-token").authenticated()
                         .requestMatchers("/swagger-ui/**", "/v3/**").permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2

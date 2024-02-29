@@ -128,11 +128,11 @@ public class AuthController {
         return ResponseEntity.ok(isPresent);
     }
 
-    @PostMapping("/revoke")
-    public ResponseEntity<String> revoke(Authentication authentication, String refreshToken) {
-        log.info(refreshToken);
+    @PostMapping("/revoke-token")
+    public ResponseEntity<String> revoke(Authentication authentication) {
+//        log.info(refreshToken);
         log.info(authentication.getName());
-        authService.revoke(authentication.getName(), refreshToken);
+//        authService.revoke(authentication.getName(), refreshToken);
         return ResponseEntity.ok("Logout success");
     }
 }
