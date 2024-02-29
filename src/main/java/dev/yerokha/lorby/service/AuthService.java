@@ -122,4 +122,8 @@ public class AuthService {
         String username = tokenService.confirmationTokenIsValid(encryptedToken);
         userRepository.enableUser(username);
     }
+
+    public void revoke(String username, String refreshToken) {
+        tokenService.revokeRefreshToken(username, refreshToken);
+    }
 }

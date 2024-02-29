@@ -47,7 +47,9 @@ public class WebSecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
-        corsConfiguration.addAllowedOrigin("*");
+        corsConfiguration.setAllowCredentials(true);
+        corsConfiguration.addAllowedOrigin("https://crazy-zam.github.io**");
+        corsConfiguration.addAllowedOrigin("http://localhost:3000");
         corsConfiguration.addAllowedHeader("*");
         corsConfiguration.addAllowedMethod("*");
         UrlBasedCorsConfigurationSource urlBasedCorsConfigurationSource = new UrlBasedCorsConfigurationSource();
@@ -58,17 +60,18 @@ public class WebSecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity security) throws Exception {
         security
-                .cors(httpSecurityCorsConfigurer -> corsConfigurationSource())
-                .cors(AbstractHttpConfigurer::disable)
                 .csrf(AbstractHttpConfigurer::disable)
+                .cors(AbstractHttpConfigurer::disable)
+                .cors(httpSecurityCorsConfigurer -> corsConfigurationSource())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/v1/auth/**").anonymous()
+                        .requestMatchers("/v1/auth/revoke").authenticated()
                         .requestMatchers("/swagger-ui/**", "/v3/**").permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(converter())))
                 .sessionManagement(session -> session.sessionCreationPolicy(STATELESS))
-                .logout(logout -> logout.logoutUrl("/v1/logout")
+                .logout(logout -> logout
                         .clearAuthentication(true)
                         .invalidateHttpSession(true)
                         .permitAll());
