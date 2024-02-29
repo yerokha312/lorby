@@ -1,6 +1,8 @@
 package dev.yerokha.lorby.util;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -10,22 +12,18 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.util.Base64;
 
 @Slf4j
+@Component
 public class TokenEncryptionUtil {
 
     private static final String ENCRYPTION_ALGORITHM = "AES";
-    private static final String ENCRYPTION_KEY = generateSecretKey(16);
+    @Value("${ENCRYPTION_KEY}")
+    private String ENCRYPTION_KEY;
 
-    public static String generateSecretKey(int length) {
-        byte[] randomBytes = new byte[length];
-        new SecureRandom().nextBytes(randomBytes);
-        return Base64.getEncoder().encodeToString(randomBytes);
-    }
-
-    public static String encryptToken(String token) {
+    public String encryptToken(String token) {
+        log.info(ENCRYPTION_KEY);
         try {
             SecretKey secretKey = new SecretKeySpec(ENCRYPTION_KEY.getBytes(), ENCRYPTION_ALGORITHM);
             Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
@@ -38,7 +36,7 @@ public class TokenEncryptionUtil {
         }
     }
 
-    public static String decryptToken(String encryptedToken) {
+    public String decryptToken(String encryptedToken) {
         try {
             SecretKey secretKey = new SecretKeySpec(ENCRYPTION_KEY.getBytes(), ENCRYPTION_ALGORITHM);
             Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);

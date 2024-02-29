@@ -5,6 +5,7 @@ import dev.yerokha.lorby.entity.UserEntity;
 import dev.yerokha.lorby.enums.TokenType;
 import dev.yerokha.lorby.exception.InvalidTokenException;
 import dev.yerokha.lorby.repository.TokenRepository;
+import dev.yerokha.lorby.util.TokenEncryptionUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -25,8 +26,6 @@ import java.util.stream.Collectors;
 import static dev.yerokha.lorby.util.RedisCachingUtil.containsKey;
 import static dev.yerokha.lorby.util.RedisCachingUtil.deleteKey;
 import static dev.yerokha.lorby.util.RedisCachingUtil.setValue;
-import static dev.yerokha.lorby.util.TokenEncryptionUtil.decryptToken;
-import static dev.yerokha.lorby.util.TokenEncryptionUtil.encryptToken;
 
 @Slf4j
 @Service
@@ -35,25 +34,27 @@ public class TokenService {
     private final JwtEncoder jwtEncoder;
     private final JwtDecoder jwtDecoder;
     private final TokenRepository tokenRepository;
+    private final TokenEncryptionUtil encryptionUtil;
     private static final int expirationMinutes = 5;
     private static final int ACCESS_TOKEN_EXPIRATION = expirationMinutes * 3;
     private static final int REFRESH_TOKEN_EXPIRATION = expirationMinutes * 12 * 24 * 7;
 
-    public TokenService(JwtEncoder jwtEncoder, JwtDecoder jwtDecoder, TokenRepository tokenRepository) {
+    public TokenService(JwtEncoder jwtEncoder, JwtDecoder jwtDecoder, TokenRepository tokenRepository, TokenEncryptionUtil encryptionUtil) {
         this.jwtEncoder = jwtEncoder;
         this.jwtDecoder = jwtDecoder;
         this.tokenRepository = tokenRepository;
+        this.encryptionUtil = encryptionUtil;
     }
 
     public String generateConfirmationToken(UserEntity entity) {
-        String token = encryptToken("Bearer " + generateToken(entity, expirationMinutes, TokenType.CONFIRMATION));
+        String token = encryptionUtil.encryptToken("Bearer " + generateToken(entity, expirationMinutes, TokenType.CONFIRMATION));
         String key = "confirmation_token:" + entity.getUsername();
         setValue(key, token, expirationMinutes, TimeUnit.MINUTES);
         return token;
     }
 
     public String confirmationTokenIsValid(String encryptedToken) {
-        String confirmationToken = decryptToken(encryptedToken);
+        String confirmationToken = encryptionUtil.decryptToken(encryptedToken);
         Jwt decodedToken = decodeToken(confirmationToken);
         String username = decodedToken.getSubject();
         String key = "confirmation_token:" + username;
@@ -71,7 +72,7 @@ public class TokenService {
 
     public String generateRefreshToken(UserEntity entity) {
         String token = generateToken(entity, REFRESH_TOKEN_EXPIRATION, TokenType.REFRESH);
-        String encryptedToken = encryptToken("Bearer " + token);
+        String encryptedToken = encryptionUtil.encryptToken("Bearer " + token);
         RefreshToken refreshToken = new RefreshToken(
                 encryptedToken,
                 entity,
@@ -159,7 +160,7 @@ public class TokenService {
         }
 
         for (RefreshToken token : tokenList) {
-            if (refreshToken.equals(decryptToken(token.getToken()))) {
+            if (refreshToken.equals(encryptionUtil.decryptToken(token.getToken()))) {
                 return false;
             }
         }
@@ -174,7 +175,7 @@ public class TokenService {
     public void revokeRefreshToken(String username, String refreshToken) {
         List<RefreshToken> notRevokedByUsername = tokenRepository.findNotRevokedByUsername(username);
         for (RefreshToken token : notRevokedByUsername) {
-            if (refreshToken.equals(decryptToken(token.getToken()))) {
+            if (refreshToken.equals(encryptionUtil.decryptToken(token.getToken()))) {
                 token.setRevoked(true);
                 return;
             }
