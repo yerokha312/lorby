@@ -23,7 +23,6 @@ public class TokenEncryptionUtil {
     private String ENCRYPTION_KEY;
 
     public String encryptToken(String token) {
-        log.info(ENCRYPTION_KEY);
         try {
             SecretKey secretKey = new SecretKeySpec(ENCRYPTION_KEY.getBytes(), ENCRYPTION_ALGORITHM);
             Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM);
