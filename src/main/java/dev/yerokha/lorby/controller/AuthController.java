@@ -1,5 +1,6 @@
 package dev.yerokha.lorby.controller;
 
+import dev.yerokha.lorby.dto.EmailAndUsername;
 import dev.yerokha.lorby.dto.LoginRequest;
 import dev.yerokha.lorby.dto.LoginResponse;
 import dev.yerokha.lorby.dto.RegistrationRequest;
@@ -19,8 +20,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Map;
 
 @Tag(name = "Authentication", description = "Controller for reg/login/confirmation etc")
 @RestController
@@ -105,13 +104,14 @@ public class AuthController {
             }
     )
     @PostMapping("/resend-confirmation")
-    public ResponseEntity<String> resend(@RequestBody Map<String, String> body) {
-        authService.sendConfirmationEmail(body);
+    public ResponseEntity<String> resend(@RequestBody EmailAndUsername request) {
+        authService.sendConfirmationEmail(request);
         return new ResponseEntity<>("Confirmation link generated, email sent", HttpStatus.OK);
     }
 
     @Operation(
-            summary = "Check presence", description = "Endpoint for pre-submit checking free username and email",
+            summary = "Check presence",
+            description = "Endpoint for pre-submit checking of available username and email",
             tags = {"authentication", "get"},
             responses = {
                     @ApiResponse(responseCode = "200", description = "Returns true or false")
@@ -127,9 +127,16 @@ public class AuthController {
         return ResponseEntity.ok(isPresent);
     }
 
+    @Operation(
+            summary = "Revoke refresh token", description = "Accepts plain refresh token string for further revocation",
+            tags = {"authentication", "post"},
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Revocation success"),
+                    @ApiResponse(responseCode = "401", description = "Invalid token")
+            }
+    )
     @PostMapping("/revoke-token")
     public ResponseEntity<String> revoke(@RequestBody String refreshToken) {
-        log.info(refreshToken);
         authService.revoke(refreshToken);
         return ResponseEntity.ok("Logout success");
     }

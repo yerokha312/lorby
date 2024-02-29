@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 
 import static dev.yerokha.lorby.util.RedisCachingUtil.containsKey;
 import static dev.yerokha.lorby.util.RedisCachingUtil.deleteKey;
+import static dev.yerokha.lorby.util.RedisCachingUtil.getValue;
 import static dev.yerokha.lorby.util.RedisCachingUtil.setValue;
 
 @Slf4j
@@ -59,7 +60,7 @@ public class TokenService {
         String username = decodedToken.getSubject();
         String key = "confirmation_token:" + username;
         boolean isValid = containsKey(key);
-        if (!isValid) {
+        if (!isValid || !encryptedToken.equals(getValue(key))) {
             throw new InvalidTokenException("Confirmation link is expired");
         }
         deleteKey(key);

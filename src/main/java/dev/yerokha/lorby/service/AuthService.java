@@ -1,5 +1,6 @@
 package dev.yerokha.lorby.service;
 
+import dev.yerokha.lorby.dto.EmailAndUsername;
 import dev.yerokha.lorby.dto.LoginRequest;
 import dev.yerokha.lorby.dto.LoginResponse;
 import dev.yerokha.lorby.dto.RegistrationRequest;
@@ -22,7 +23,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Map;
 import java.util.Set;
 
 @Service
@@ -70,7 +70,7 @@ public class AuthService {
 
         userRepository.save(entity);
 
-        sendConfirmationEmail(Map.of("username", username, "email", email));
+        sendConfirmationEmail(new EmailAndUsername(username, email));
     }
 
     public boolean isPresentEmail(String email) {
@@ -81,9 +81,9 @@ public class AuthService {
         return userRepository.findByUsernameIgnoreCase(username).isPresent();
     }
 
-    public void sendConfirmationEmail(Map<String, String> body) {
+    public void sendConfirmationEmail(EmailAndUsername request) {
         UserEntity entity = userRepository.findByUsernameOrEmail(
-                body.get("username"), body.get("email")).orElseThrow(() ->
+                request.username(), request.email()).orElseThrow(() ->
                 new UsernameNotFoundException("User not found"));
         if (entity.isEnabled()) {
             throw new UserAlreadyEnabledException("User has already confirmed email address");
