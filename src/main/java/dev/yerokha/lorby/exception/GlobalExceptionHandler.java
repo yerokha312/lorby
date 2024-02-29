@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<String> handleMethodArgumentNotValidException(MethodArgumentNotValidException exception) {
+    public ResponseEntity<String> handleMethodArgumentNotValidException() {
         return new ResponseEntity<>("Invalid input", HttpStatus.BAD_REQUEST);
     }
 
@@ -40,4 +40,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleEmailAlreadyTakenException(EmailAlreadyTakenException exception) {
         return new ResponseEntity<>(exception.getMessage(), HttpStatus.CONFLICT);
     }
+
+    @ExceptionHandler(UserAlreadyEnabledException.class)
+    public ResponseEntity<String> handleUserAlreadyEnabledException(UserAlreadyEnabledException exception) {
+        return new ResponseEntity<>(exception.getMessage(), HttpStatus.I_AM_A_TEAPOT);
+    }
+
+
 }

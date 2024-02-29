@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static dev.yerokha.lorby.util.RedisCachingUtil.containsKey;
+import static dev.yerokha.lorby.util.RedisCachingUtil.deleteKey;
 import static dev.yerokha.lorby.util.RedisCachingUtil.setValue;
 import static dev.yerokha.lorby.util.TokenEncryptionUtil.decryptToken;
 import static dev.yerokha.lorby.util.TokenEncryptionUtil.encryptToken;
@@ -60,6 +61,7 @@ public class TokenService {
         if (!isValid) {
             throw new InvalidTokenException("Confirmation link is expired");
         }
+        deleteKey(key);
         return username;
     }
 
@@ -70,7 +72,6 @@ public class TokenService {
     public String generateRefreshToken(UserEntity entity) {
         String token = generateToken(entity, REFRESH_TOKEN_EXPIRATION, TokenType.REFRESH);
         String encryptedToken = encryptToken("Bearer " + token);
-        log.info("Encrypted token: " + encryptedToken);
         RefreshToken refreshToken = new RefreshToken(
                 encryptedToken,
                 entity,
@@ -82,16 +83,11 @@ public class TokenService {
     }
 
     private String generateToken(UserEntity entity, int expirationTime, TokenType tokenType) {
-        log.info(String.valueOf(expirationTime));
         Instant now = Instant.now();
         String scopes = getScopes(entity);
 
         JwtClaimsSet claims = getClaims(now, expirationTime, entity.getUsername(), scopes, tokenType);
-        String token = encodeToken(claims);
-
-        log.info("Generated {} token for user {}", token, entity.getUsername());
-
-        return token;
+        return encodeToken(claims);
     }
 
     private String getScopes(UserEntity entity) {
@@ -152,7 +148,6 @@ public class TokenService {
         String subject = decodedToken.getSubject();
         String scopes = decodedToken.getClaim("scopes");
         JwtClaimsSet claims = getClaims(now, ACCESS_TOKEN_EXPIRATION, subject, scopes, TokenType.ACCESS);
-        log.info("Generated new access token for user {}", subject);
         return encodeToken(claims);
 
     }
