@@ -123,7 +123,7 @@ public class AuthService {
         userRepository.enableUser(username);
     }
 
-    public void revoke(String username, String refreshToken) {
-        tokenService.revokeRefreshToken(username, refreshToken);
+    public void revoke(String refreshToken) {
+        tokenService.revokeRefreshToken(refreshToken);
     }
 }

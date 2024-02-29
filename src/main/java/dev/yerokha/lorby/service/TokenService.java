@@ -172,11 +172,13 @@ public class TokenService {
         return Objects.requireNonNull(decodedToken.getExpiresAt()).isBefore(Instant.now());
     }
 
-    public void revokeRefreshToken(String username, String refreshToken) {
+    public void revokeRefreshToken(String refreshToken) {
+        String username = decodeToken(refreshToken).getSubject();
         List<RefreshToken> notRevokedByUsername = tokenRepository.findNotRevokedByUsername(username);
         for (RefreshToken token : notRevokedByUsername) {
             if (refreshToken.equals(encryptionUtil.decryptToken(token.getToken()))) {
                 token.setRevoked(true);
+                tokenRepository.save(token);
                 return;
             }
         }

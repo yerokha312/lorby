@@ -3,6 +3,7 @@ package dev.yerokha.lorby;
 import dev.yerokha.lorby.entity.Role;
 import dev.yerokha.lorby.entity.UserEntity;
 import dev.yerokha.lorby.repository.RoleRepository;
+import dev.yerokha.lorby.repository.TokenRepository;
 import dev.yerokha.lorby.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -19,8 +20,9 @@ public class LorbyApplication {
     }
 
     @Bean
-    CommandLineRunner runner(RoleRepository roleRepository, UserRepository userRepository) {
+    CommandLineRunner runner(RoleRepository roleRepository, UserRepository userRepository, TokenRepository tokenRepository) {
         return args -> {
+            tokenRepository.deleteAll();
             if (roleRepository.count() > 0) {
                 return;
             }
