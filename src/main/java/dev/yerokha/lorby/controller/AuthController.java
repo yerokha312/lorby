@@ -13,6 +13,7 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -108,5 +109,30 @@ public class AuthController {
     public ResponseEntity<String> resend(@RequestBody Map<String, String> body) {
         authService.sendConfirmationEmail(body);
         return new ResponseEntity<>("Confirmation link generated, email sent", HttpStatus.OK);
+    }
+
+    @Operation(
+            summary = "Check presence", description = "Endpoint for pre-submit checking free username and email",
+            tags = {"authentication", "get"},
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Returns true or false")
+            }
+    )
+    @GetMapping("/check-presence")
+    public ResponseEntity<Boolean> checkPresence(@RequestBody String username) {
+        boolean isPresent = authService.isPresentUsername(username);
+        if (isPresent) {
+            return ResponseEntity.ok(isPresent);
+        }
+        isPresent = authService.isPresentEmail(username);
+        return ResponseEntity.ok(isPresent);
+    }
+
+    @PostMapping("/revoke")
+    public ResponseEntity<String> revoke(Authentication authentication, String refreshToken) {
+        log.info(refreshToken);
+        log.info(authentication.getName());
+        authService.revoke(authentication.getName(), refreshToken);
+        return ResponseEntity.ok("Logout success");
     }
 }

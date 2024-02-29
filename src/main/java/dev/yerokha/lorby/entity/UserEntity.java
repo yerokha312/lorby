@@ -56,6 +56,14 @@ public class UserEntity implements UserDetails {
         this.authorities = authorities;
     }
 
+    public UserEntity(String username, String email, String password, boolean isEnabled, Set<Role> authorities) {
+        this.username = username;
+        this.email = email;
+        this.password = password;
+        this.isEnabled = isEnabled;
+        this.authorities = authorities;
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return this.authorities;

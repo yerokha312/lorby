@@ -53,12 +53,12 @@ public class AuthService {
 
     public void createUser(RegistrationRequest request) {
         String username = request.username();
-        if (userRepository.findByUsernameIgnoreCase(username).isPresent()) {
+        if (isPresentUsername(username)) {
             throw new UsernameAlreadyTakenException(String.format("Username %s already taken", username));
         }
 
         String email = request.email();
-        if (userRepository.findByEmailIgnoreCase(email).isPresent()) {
+        if (isPresentEmail(email)) {
             throw new EmailAlreadyTakenException(String.format("Email %s already taken", email));
         }
         UserEntity entity = new UserEntity(
@@ -71,6 +71,14 @@ public class AuthService {
         userRepository.save(entity);
 
         sendConfirmationEmail(Map.of("username", username, "email", email));
+    }
+
+    public boolean isPresentEmail(String email) {
+        return userRepository.findByEmailIgnoreCase(email).isPresent();
+    }
+
+    public boolean isPresentUsername(String username) {
+        return userRepository.findByUsernameIgnoreCase(username).isPresent();
     }
 
     public void sendConfirmationEmail(Map<String, String> body) {
@@ -113,5 +121,9 @@ public class AuthService {
     public void confirmEmail(String encryptedToken) {
         String username = tokenService.confirmationTokenIsValid(encryptedToken);
         userRepository.enableUser(username);
+    }
+
+    public void revoke(String username, String refreshToken) {
+        tokenService.revokeRefreshToken(username, refreshToken);
     }
 }

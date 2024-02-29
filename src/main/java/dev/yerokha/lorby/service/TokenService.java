@@ -170,4 +170,14 @@ public class TokenService {
     private boolean isExpired(Jwt decodedToken) {
         return Objects.requireNonNull(decodedToken.getExpiresAt()).isBefore(Instant.now());
     }
+
+    public void revokeRefreshToken(String username, String refreshToken) {
+        List<RefreshToken> notRevokedByUsername = tokenRepository.findNotRevokedByUsername(username);
+        for (RefreshToken token : notRevokedByUsername) {
+            if (refreshToken.equals(decryptToken(token.getToken()))) {
+                token.setRevoked(true);
+                return;
+            }
+        }
+    }
 }
