@@ -109,4 +109,14 @@ public class AuthController {
         authService.sendConfirmationEmail(body);
         return new ResponseEntity<>("Confirmation link generated, email sent", HttpStatus.OK);
     }
+
+    @GetMapping("/check-presence")
+    public ResponseEntity<Boolean> checkPresence(@RequestBody String username) {
+        boolean isPresent = authService.isPresentUsername(username);
+        if (isPresent) {
+            return ResponseEntity.ok(isPresent);
+        }
+        isPresent = authService.isPresentEmail(username);
+        return ResponseEntity.ok(isPresent);
+    }
 }
