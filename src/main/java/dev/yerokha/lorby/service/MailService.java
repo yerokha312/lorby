@@ -1,5 +1,6 @@
 package dev.yerokha.lorby.service;
 
+import dev.yerokha.lorby.service.interfaces.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailSendException;
