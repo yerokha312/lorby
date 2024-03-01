@@ -65,13 +65,13 @@ public class AuthController {
 
     @Operation(
             summary = "Refresh", description = "Obtain a new access token using refresh token",
-            tags = {"authentication", "get"},
+            tags = {"authentication", "post"},
             responses = {
                     @ApiResponse(responseCode = "200", description = "Access token obtained successfully"),
                     @ApiResponse(responseCode = "401", description = "Invalid token exception", content = @Content)
             }
     )
-    @GetMapping("/refresh-token")
+    @PostMapping("/refresh-token")
     public ResponseEntity<String> refreshToken(@RequestBody String refreshToken) {
         return ResponseEntity.ok(authService.refreshToken(refreshToken));
     }
@@ -112,13 +112,13 @@ public class AuthController {
 
     @Operation(
             summary = "Check presence",
-            description = "Endpoint for pre-submit checking of available username and email",
-            tags = {"authentication", "get"},
+            description = "Endpoint for pre-submit checking of available username and email. False if available",
+            tags = {"authentication", "post"},
             responses = {
                     @ApiResponse(responseCode = "200", description = "Returns true or false")
             }
     )
-    @GetMapping("/check-presence")
+    @PostMapping("/check-presence")
     public ResponseEntity<Boolean> checkPresence(@RequestBody @Valid EmailAndUsername emailAndUsername) {
         boolean isPresent = authService.isPresentUsername(emailAndUsername.username());
         if (isPresent) {
