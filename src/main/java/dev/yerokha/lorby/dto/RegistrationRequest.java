@@ -12,6 +12,7 @@ public record RegistrationRequest(
                 message = "Username must consist of 6-20 latin letters")
         String username,
         @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*()_+\\-={}:;.,<>/?]).{8,15}$")
-        String password
+        String password,
+        String endpoint
 ) {
 }

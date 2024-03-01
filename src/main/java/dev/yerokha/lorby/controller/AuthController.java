@@ -44,9 +44,8 @@ public class AuthController {
             }
     )
     @PostMapping("/registration")
-    public ResponseEntity<String> registerUser(@Valid @RequestBody RegistrationRequest request,
-                                               @RequestParam(required = false) String endpoint) {
-        authService.createUser(request, endpoint);
+    public ResponseEntity<String> registerUser(@Valid @RequestBody RegistrationRequest request) {
+        authService.createUser(request, request.endpoint());
         return new ResponseEntity<>("Confirmation link generated, email sent", HttpStatus.CREATED);
     }
 
@@ -106,9 +105,8 @@ public class AuthController {
             }
     )
     @PostMapping("/resend-confirmation")
-    public ResponseEntity<String> resend(@RequestBody @Valid EmailAndUsername request,
-                                         @RequestParam(required = false) String endpoint) {
-        authService.sendConfirmationEmail(request, endpoint);
+    public ResponseEntity<String> resend(@RequestBody @Valid EmailAndUsername request) {
+        authService.sendConfirmationEmail(request, request.endpoint());
         return new ResponseEntity<>("Confirmation link generated, email sent", HttpStatus.OK);
     }
 
@@ -153,9 +151,8 @@ public class AuthController {
             }
     )
     @PostMapping("/forgot-password")
-    public ResponseEntity<String> findUser(@RequestBody @Valid EmailAndUsername usernameOrEmail,
-                                           @RequestParam(required = false) String endpoint) {
-        authService.sendResetPasswordEmail(usernameOrEmail, endpoint);
+    public ResponseEntity<String> findUser(@RequestBody @Valid EmailAndUsername usernameOrEmail) {
+        authService.sendResetPasswordEmail(usernameOrEmail, usernameOrEmail.endpoint());
         return ResponseEntity.ok("Confirmation link generated, email sent");
     }
 

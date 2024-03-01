@@ -10,6 +10,7 @@ public record EmailAndUsername(
                 message = "Username must consist of 6-20 latin letters")
         String username,
         @Email
-        String email
+        String email,
+        String endpoint
 ) {
 }
