@@ -65,7 +65,10 @@ public class WebSecurityConfig {
                 .cors(httpSecurityCorsConfigurer -> corsConfigurationSource())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/v1/auth/**").anonymous()
-                        .requestMatchers("/swagger-ui/**", "/v3/**", "/v1/auth/revoke-token").permitAll()
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/v3/**",
+                                "/v1/auth/revoke-token").permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(converter())))
