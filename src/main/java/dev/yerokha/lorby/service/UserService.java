@@ -19,7 +19,7 @@ public class UserService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) {
-        return userRepository.findByUsernameOrEmail(username, username).orElseThrow(() ->
+        return userRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(username, username).orElseThrow(() ->
                 new UsernameNotFoundException("User not found"));
     }
 
