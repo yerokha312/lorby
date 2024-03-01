@@ -52,7 +52,7 @@ public class AuthService {
         this.mailService = mailService;
     }
 
-    public void createUser(RegistrationRequest request) {
+    public void createUser(RegistrationRequest request, String endpoint) {
         String username = request.username();
         if (isPresentUsername(username)) {
             throw new UsernameAlreadyTakenException(String.format("Username %s already taken", username));
@@ -71,7 +71,7 @@ public class AuthService {
 
         userRepository.save(entity);
 
-        sendConfirmationEmail(new EmailAndUsername(username, email));
+        sendConfirmationEmail(new EmailAndUsername(username, email), endpoint);
     }
 
     public boolean isPresentEmail(String email) {
@@ -82,7 +82,7 @@ public class AuthService {
         return userRepository.findByUsernameIgnoreCase(username).isPresent();
     }
 
-    public void sendConfirmationEmail(EmailAndUsername request) {
+    public void sendConfirmationEmail(EmailAndUsername request, String endpoint) {
         UserEntity entity = userRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(
                 request.username(), request.email()).orElseThrow(() ->
                 new UsernameNotFoundException("User not found"));
@@ -91,7 +91,7 @@ public class AuthService {
         }
         String confirmationToken = tokenService.generateConfirmationToken(entity);
         mailService.sendConfirmationEmail(entity.getEmail(),
-                link + "confirmation?ct=" + confirmationToken);
+                (endpoint == null ? link : endpoint) + "confirmation?ct=" + confirmationToken);
     }
 
     public LoginResponse login(LoginRequest request) {
@@ -129,7 +129,7 @@ public class AuthService {
         tokenService.revokeRefreshToken(refreshToken);
     }
 
-    public void sendResetPasswordEmail(EmailAndUsername emailAndUsername) {
+    public void sendResetPasswordEmail(EmailAndUsername emailAndUsername, String endpoint) {
         UserEntity entity = userRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(
                 emailAndUsername.username(), emailAndUsername.email()).orElse(null);
         if (entity == null) {
@@ -137,7 +137,7 @@ public class AuthService {
         }
         String confirmationToken = tokenService.generateConfirmationToken(entity);
         mailService.sendConfirmationEmail(entity.getEmail(),
-                link + "reset-password?rpt=" + confirmationToken);
+                (endpoint == null ? link : endpoint) + "reset-password?rpt=" + confirmationToken);
     }
 
     public void resetPassword(String username, String password, String encryptedToken) {

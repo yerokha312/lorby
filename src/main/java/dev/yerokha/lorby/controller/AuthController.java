@@ -44,8 +44,9 @@ public class AuthController {
             }
     )
     @PostMapping("/registration")
-    public ResponseEntity<String> registerUser(@Valid @RequestBody RegistrationRequest request) {
-        authService.createUser(request);
+    public ResponseEntity<String> registerUser(@Valid @RequestBody RegistrationRequest request,
+                                               @RequestParam(required = false) String endpoint) {
+        authService.createUser(request, endpoint);
         return new ResponseEntity<>("Confirmation link generated, email sent", HttpStatus.CREATED);
     }
 
@@ -78,7 +79,7 @@ public class AuthController {
 
     @Operation(
             summary = "Confirmation", description = "Confirm email by clicking the sent link " +
-            "(https://crazy-zam.github.io/neo-auth/auth/confirmation?ct=)",
+            "({https://crazy-zam.github.io/neo-auth/auth/}confirmation?ct=)",
             tags = {"authentication", "get"},
             responses = {
                     @ApiResponse(responseCode = "200", description = "Email confirmed successfully"),
@@ -105,8 +106,9 @@ public class AuthController {
             }
     )
     @PostMapping("/resend-confirmation")
-    public ResponseEntity<String> resend(@RequestBody @Valid EmailAndUsername request) {
-        authService.sendConfirmationEmail(request);
+    public ResponseEntity<String> resend(@RequestBody @Valid EmailAndUsername request,
+                                         @RequestParam(required = false) String endpoint) {
+        authService.sendConfirmationEmail(request, endpoint);
         return new ResponseEntity<>("Confirmation link generated, email sent", HttpStatus.OK);
     }
 
@@ -143,15 +145,17 @@ public class AuthController {
     }
 
     @Operation(
-            summary = "Forgot password", description = "Send confirmation email for password reset",
+            summary = "Forgot password", description = "Send confirmation email for password reset" +
+            "({https://crazy-zam.github.io/neo-auth/auth/}reset-password?rpt=)",
             tags = {"authentication", "post"},
             responses = {
                     @ApiResponse(responseCode = "200", description = "Email sent or user not found")
             }
     )
     @PostMapping("/forgot-password")
-    public ResponseEntity<String> findUser(@RequestBody @Valid EmailAndUsername usernameOrEmail) {
-        authService.sendResetPasswordEmail(usernameOrEmail);
+    public ResponseEntity<String> findUser(@RequestBody @Valid EmailAndUsername usernameOrEmail,
+                                           @RequestParam(required = false) String endpoint) {
+        authService.sendResetPasswordEmail(usernameOrEmail, endpoint);
         return ResponseEntity.ok("Confirmation link generated, email sent");
     }
 
