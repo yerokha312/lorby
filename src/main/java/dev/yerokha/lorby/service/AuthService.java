@@ -83,7 +83,7 @@ public class AuthService {
     }
 
     public void sendConfirmationEmail(EmailAndUsername request) {
-        UserEntity entity = userRepository.findByUsernameOrEmail(
+        UserEntity entity = userRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(
                 request.username(), request.email()).orElseThrow(() ->
                 new UsernameNotFoundException("User not found"));
         if (entity.isEnabled()) {
@@ -130,7 +130,7 @@ public class AuthService {
     }
 
     public void sendResetPasswordEmail(EmailAndUsername emailAndUsername) {
-        UserEntity entity = userRepository.findByUsernameOrEmail(
+        UserEntity entity = userRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(
                 emailAndUsername.username(), emailAndUsername.email()).orElse(null);
         if (entity == null) {
             return;
@@ -145,7 +145,7 @@ public class AuthService {
         if (!username.equals(tokenUsername)) {
             throw new InvalidTokenException("Username is invalid");
         }
-        UserEntity entity = userRepository.findByUsernameOrEmail(
+        UserEntity entity = userRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(
                 username, username).orElseThrow(() ->
                 new UsernameNotFoundException("User not found"));
         entity.setPassword(passwordEncoder.encode(password));

@@ -49,6 +49,7 @@ public class MailService implements NotificationService {
         String emailBody = engine.process(confirmationUrl
                 .contains("confirmation") ? "confirmation_email" : "confirmation_password", context);
 
-        send(to, "Email confirmation", emailBody);
+        send(to, confirmationUrl
+                .contains("confirmation") ? "Email confirmation" : "Password reset", emailBody);
     }
 }
