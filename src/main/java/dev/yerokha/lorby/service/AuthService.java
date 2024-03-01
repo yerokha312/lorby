@@ -52,7 +52,7 @@ public class AuthService {
         this.mailService = mailService;
     }
 
-    public void createUser(RegistrationRequest request, String endpoint) {
+    public void createUser(RegistrationRequest request) {
         String username = request.username();
         if (isPresentUsername(username)) {
             throw new UsernameAlreadyTakenException(String.format("Username %s already taken", username));
@@ -71,7 +71,7 @@ public class AuthService {
 
         userRepository.save(entity);
 
-        sendConfirmationEmail(new EmailAndUsername(username, email), endpoint);
+        sendConfirmationEmail(new EmailAndUsername(username, email, request.endpoint()));
     }
 
     public boolean isPresentEmail(String email) {
@@ -82,7 +82,8 @@ public class AuthService {
         return userRepository.findByUsernameIgnoreCase(username).isPresent();
     }
 
-    public void sendConfirmationEmail(EmailAndUsername request, String endpoint) {
+    public void sendConfirmationEmail(EmailAndUsername request) {
+        String endpoint = request.endpoint();
         UserEntity entity = userRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(
                 request.username(), request.email()).orElseThrow(() ->
                 new UsernameNotFoundException("User not found"));
@@ -129,15 +130,16 @@ public class AuthService {
         tokenService.revokeRefreshToken(refreshToken);
     }
 
-    public void sendResetPasswordEmail(EmailAndUsername emailAndUsername, String endpoint) {
+    public void sendResetPasswordEmail(EmailAndUsername request) {
         UserEntity entity = userRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(
-                emailAndUsername.username(), emailAndUsername.email()).orElse(null);
+                request.username(), request.email()).orElse(null);
         if (entity == null) {
             return;
         }
         String confirmationToken = tokenService.generateConfirmationToken(entity);
         mailService.sendConfirmationEmail(entity.getEmail(),
-                (endpoint == null ? link : endpoint) + "reset-password?rpt=" + confirmationToken);
+                (request.endpoint() == null ? link : request.endpoint()) +
+                        "reset-password?rpt=" + confirmationToken);
     }
 
     public void resetPassword(String username, String password, String encryptedToken) {
