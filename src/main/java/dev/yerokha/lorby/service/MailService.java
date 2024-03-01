@@ -46,7 +46,8 @@ public class MailService implements NotificationService {
         Context context = new Context();
         context.setVariable("confirmationUrl", confirmationUrl);
 
-        String emailBody = engine.process("confirmation_email", context);
+        String emailBody = engine.process(confirmationUrl
+                .contains("confirmation") ? "confirmation_email" : "confirmation_password", context);
 
         send(to, "Email confirmation", emailBody);
     }

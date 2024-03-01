@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -104,7 +105,7 @@ public class AuthController {
             }
     )
     @PostMapping("/resend-confirmation")
-    public ResponseEntity<String> resend(@RequestBody EmailAndUsername request) {
+    public ResponseEntity<String> resend(@RequestBody @Valid EmailAndUsername request) {
         authService.sendConfirmationEmail(request);
         return new ResponseEntity<>("Confirmation link generated, email sent", HttpStatus.OK);
     }
@@ -118,12 +119,12 @@ public class AuthController {
             }
     )
     @GetMapping("/check-presence")
-    public ResponseEntity<Boolean> checkPresence(@RequestBody String username) {
-        boolean isPresent = authService.isPresentUsername(username);
+    public ResponseEntity<Boolean> checkPresence(@RequestBody @Valid EmailAndUsername emailAndUsername) {
+        boolean isPresent = authService.isPresentUsername(emailAndUsername.username());
         if (isPresent) {
             return ResponseEntity.ok(isPresent);
         }
-        isPresent = authService.isPresentEmail(username);
+        isPresent = authService.isPresentEmail(emailAndUsername.email());
         return ResponseEntity.ok(isPresent);
     }
 
@@ -139,5 +140,34 @@ public class AuthController {
     public ResponseEntity<String> revoke(@RequestBody String refreshToken) {
         authService.revoke(refreshToken);
         return ResponseEntity.ok("Logout success");
+    }
+
+    @Operation(
+            summary = "Forgot password", description = "Send confirmation email for password reset",
+            tags = {"authentication", "post"},
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Email sent or user not found")
+            }
+    )
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String> findUser(@RequestBody @Valid EmailAndUsername usernameOrEmail) {
+        authService.sendResetPasswordEmail(usernameOrEmail);
+        return ResponseEntity.ok("Confirmation link generated, email sent");
+    }
+
+    @Operation(
+            summary = "Reset password", description = "Verifies sent token and resets password for a new one",
+            tags = {"authentication", "put"},
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Password reset successfully"),
+                    @ApiResponse(responseCode = "400", description = "Invalid input"),
+                    @ApiResponse(responseCode = "401", description = "Username from token does not match")
+            }
+    )
+    @PutMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@RequestParam("rpt") String encryptedToken,
+                                                @RequestBody @Valid RegistrationRequest request) {
+        authService.resetPassword(request.username(), request.password(), encryptedToken);
+        return ResponseEntity.ok("Password reset");
     }
 }

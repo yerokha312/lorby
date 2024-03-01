@@ -184,4 +184,10 @@ public class TokenService {
             }
         }
     }
+
+    public void revokeAllRefreshTokes(String username) {
+        List<RefreshToken> notRevokedByUsername = tokenRepository.findNotRevokedByUsername(username);
+        notRevokedByUsername.forEach(token -> token.setRevoked(true));
+        tokenRepository.saveAll(notRevokedByUsername);
+    }
 }

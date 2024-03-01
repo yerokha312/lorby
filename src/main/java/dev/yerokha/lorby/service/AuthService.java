@@ -6,6 +6,7 @@ import dev.yerokha.lorby.dto.LoginResponse;
 import dev.yerokha.lorby.dto.RegistrationRequest;
 import dev.yerokha.lorby.entity.UserEntity;
 import dev.yerokha.lorby.exception.EmailAlreadyTakenException;
+import dev.yerokha.lorby.exception.InvalidTokenException;
 import dev.yerokha.lorby.exception.UserAlreadyEnabledException;
 import dev.yerokha.lorby.exception.UsernameAlreadyTakenException;
 import dev.yerokha.lorby.repository.RoleRepository;
@@ -90,13 +91,14 @@ public class AuthService {
         }
         String confirmationToken = tokenService.generateConfirmationToken(entity);
         mailService.sendConfirmationEmail(entity.getEmail(),
-                link + "?ct=" + confirmationToken);
+                link + "confirmation?ct=" + confirmationToken);
     }
 
     public LoginResponse login(LoginRequest request) {
         try {
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.username(), request.password()));
+                    new UsernamePasswordAuthenticationToken(request.username(),
+                            request.password()));
 
             UserEntity entity = (UserEntity) authentication.getPrincipal();
             return new LoginResponse(
@@ -126,4 +128,29 @@ public class AuthService {
     public void revoke(String refreshToken) {
         tokenService.revokeRefreshToken(refreshToken);
     }
+
+    public void sendResetPasswordEmail(EmailAndUsername emailAndUsername) {
+        UserEntity entity = userRepository.findByUsernameOrEmail(
+                emailAndUsername.username(), emailAndUsername.email()).orElse(null);
+        if (entity == null) {
+            return;
+        }
+        String confirmationToken = tokenService.generateConfirmationToken(entity);
+        mailService.sendConfirmationEmail(entity.getEmail(),
+                link + "reset-password?rpt=" + confirmationToken);
+    }
+
+    public void resetPassword(String username, String password, String encryptedToken) {
+        String tokenUsername = tokenService.confirmationTokenIsValid(encryptedToken);
+        if (!username.equals(tokenUsername)) {
+            throw new InvalidTokenException("Username is invalid");
+        }
+        UserEntity entity = userRepository.findByUsernameOrEmail(
+                username, username).orElseThrow(() ->
+                new UsernameNotFoundException("User not found"));
+        entity.setPassword(passwordEncoder.encode(password));
+        tokenService.revokeAllRefreshTokes(username);
+        userRepository.save(entity);
+    }
+
 }
