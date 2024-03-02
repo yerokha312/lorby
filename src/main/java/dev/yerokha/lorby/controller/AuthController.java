@@ -168,7 +168,7 @@ public class AuthController {
     @PutMapping("/reset-password")
     public ResponseEntity<String> resetPassword(@RequestParam("rpt") String encryptedToken,
                                                 @RequestBody @Valid RegistrationRequest request) {
-        authService.resetPassword(request.username(), request.password(), encryptedToken);
+        authService.resetPassword(request.password(), encryptedToken);
         return ResponseEntity.ok("Password reset");
     }
 }

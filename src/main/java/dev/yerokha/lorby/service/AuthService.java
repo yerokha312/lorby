@@ -6,7 +6,6 @@ import dev.yerokha.lorby.dto.LoginResponse;
 import dev.yerokha.lorby.dto.RegistrationRequest;
 import dev.yerokha.lorby.entity.UserEntity;
 import dev.yerokha.lorby.exception.EmailAlreadyTakenException;
-import dev.yerokha.lorby.exception.InvalidTokenException;
 import dev.yerokha.lorby.exception.UserAlreadyEnabledException;
 import dev.yerokha.lorby.exception.UsernameAlreadyTakenException;
 import dev.yerokha.lorby.repository.RoleRepository;
@@ -142,16 +141,13 @@ public class AuthService {
                         "reset-password?rpt=" + confirmationToken);
     }
 
-    public void resetPassword(String username, String password, String encryptedToken) {
+    public void resetPassword(String password, String encryptedToken) {
         String tokenUsername = tokenService.confirmationTokenIsValid(encryptedToken);
-        if (!username.equals(tokenUsername)) {
-            throw new InvalidTokenException("Username is invalid");
-        }
         UserEntity entity = userRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(
-                username, username).orElseThrow(() ->
+                tokenUsername, tokenUsername).orElseThrow(() ->
                 new UsernameNotFoundException("User not found"));
         entity.setPassword(passwordEncoder.encode(password));
-        tokenService.revokeAllRefreshTokes(username);
+        tokenService.revokeAllRefreshTokes(tokenUsername);
         userRepository.save(entity);
     }
 
