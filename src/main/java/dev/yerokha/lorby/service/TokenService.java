@@ -13,7 +13,6 @@ import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
-import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -68,7 +67,12 @@ public class TokenService {
     }
 
     public String generateAccessToken(UserEntity entity) {
-        return generateToken(entity, ACCESS_TOKEN_EXPIRATION, TokenType.ACCESS);
+        String accessToken = generateToken(entity, ACCESS_TOKEN_EXPIRATION, TokenType.ACCESS);
+        setValue("access_token:" + entity.getUsername(),
+                accessToken,
+                ACCESS_TOKEN_EXPIRATION,
+                TimeUnit.MINUTES);
+        return accessToken;
     }
 
     public String generateRefreshToken(UserEntity entity) {
@@ -113,9 +117,9 @@ public class TokenService {
         return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
     }
 
-//    public String getUsernameFromToken(String token) {
-//        return decodeToken(token).getSubject();
-//    }
+    public String getUsernameFromToken(String token) {
+        return decodeToken(token).getSubject();
+    }
 
     private Jwt decodeToken(String token) {
         if (!token.startsWith("Bearer ")) {
@@ -126,7 +130,7 @@ public class TokenService {
 
         try {
             return jwtDecoder.decode(strippedToken);
-        } catch (JwtException e) {
+        } catch (Exception e) {
             throw new InvalidTokenException("Invalid token");
         }
     }
@@ -150,7 +154,10 @@ public class TokenService {
         String subject = decodedToken.getSubject();
         String scopes = decodedToken.getClaim("scopes");
         JwtClaimsSet claims = getClaims(now, ACCESS_TOKEN_EXPIRATION, subject, scopes, TokenType.ACCESS);
-        return encodeToken(claims);
+        String token = encodeToken(claims);
+        String key = "access_token:" + username;
+        setValue(key, token, ACCESS_TOKEN_EXPIRATION, TimeUnit.MINUTES);
+        return token;
 
     }
 
@@ -173,13 +180,18 @@ public class TokenService {
         return Objects.requireNonNull(decodedToken.getExpiresAt()).isBefore(Instant.now());
     }
 
-    public void revokeRefreshToken(String refreshToken) {
-        String username = decodeToken(refreshToken).getSubject();
+    public void revokeToken(String token) {
+        String username = decodeToken(token).getSubject();
+        String key = "access_token:" + username;
+        if (containsKey(key)) {
+            deleteKey(key);
+            return;
+        }
         List<RefreshToken> notRevokedByUsername = tokenRepository.findNotRevokedByUsername(username);
-        for (RefreshToken token : notRevokedByUsername) {
-            if (refreshToken.equals(encryptionUtil.decryptToken(token.getToken()))) {
-                token.setRevoked(true);
-                tokenRepository.save(token);
+        for (RefreshToken refreshToken : notRevokedByUsername) {
+            if (token.equals(encryptionUtil.decryptToken(refreshToken.getToken()))) {
+                refreshToken.setRevoked(true);
+                tokenRepository.save(refreshToken);
                 return;
             }
         }

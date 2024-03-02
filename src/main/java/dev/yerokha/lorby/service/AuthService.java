@@ -10,6 +10,8 @@ import dev.yerokha.lorby.exception.UserAlreadyEnabledException;
 import dev.yerokha.lorby.exception.UsernameAlreadyTakenException;
 import dev.yerokha.lorby.repository.RoleRepository;
 import dev.yerokha.lorby.repository.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -20,6 +22,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +30,7 @@ import java.util.Set;
 
 @Service
 @Slf4j
-public class AuthService {
+public class AuthService implements LogoutHandler {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
@@ -35,6 +38,7 @@ public class AuthService {
     private final TokenService tokenService;
     private final AuthenticationManager authenticationManager;
     private final MailService mailService;
+
     @Value("${LINK}")
     private String link;
 
@@ -126,7 +130,7 @@ public class AuthService {
     }
 
     public void revoke(String refreshToken) {
-        tokenService.revokeRefreshToken(refreshToken);
+        tokenService.revokeToken(refreshToken);
     }
 
     public void sendResetPasswordEmail(EmailAndUsername request) {
@@ -151,4 +155,12 @@ public class AuthService {
         userRepository.save(entity);
     }
 
+    @Override
+    public void logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
+        final String accessToken = request.getHeader("Authorization");
+        if (accessToken == null || !accessToken.startsWith("Bearer ")) {
+            return;
+        }
+        tokenService.revokeToken(accessToken);
+    }
 }
