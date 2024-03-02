@@ -49,6 +49,7 @@ public class WebSecurityConfig {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
         corsConfiguration.setAllowCredentials(true);
         corsConfiguration.addAllowedOrigin("https://crazy-zam.github.io");
+        corsConfiguration.addAllowedOrigin("https://master--celebrated-kelpie-5588c7.netlify.app");
         corsConfiguration.addAllowedOrigin("http://localhost:3000");
         corsConfiguration.addAllowedHeader("*");
         corsConfiguration.addAllowedMethod("*");
