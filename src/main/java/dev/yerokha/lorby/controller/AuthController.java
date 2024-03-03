@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -137,8 +138,8 @@ public class AuthController {
             }
     )
     @PostMapping("/revoke-token")
-    public ResponseEntity<String> revoke(@RequestBody String refreshToken) {
-        authService.revoke(refreshToken);
+    public ResponseEntity<String> revoke(@RequestBody String refreshToken, HttpServletRequest request) {
+        authService.revoke(refreshToken, request);
         return ResponseEntity.ok("Logout success");
     }
 

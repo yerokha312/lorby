@@ -2,7 +2,7 @@ package dev.yerokha.lorby.config;
 
 import dev.yerokha.lorby.service.TokenService;
 import dev.yerokha.lorby.service.UserService;
-import dev.yerokha.lorby.util.RedisCachingUtil;
+import dev.yerokha.lorby.util.TokenEncryptionUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,8 +18,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-import static dev.yerokha.lorby.util.RedisCachingUtil.*;
 import static dev.yerokha.lorby.util.RedisCachingUtil.containsKey;
+import static dev.yerokha.lorby.util.RedisCachingUtil.getValue;
 
 @Component
 @Slf4j
@@ -27,10 +27,12 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
     private final TokenService tokenService;
     private final UserService userService;
+    private final TokenEncryptionUtil encryptionUtil;
 
-    public TokenAuthenticationFilter(TokenService tokenService, UserService userService) {
+    public TokenAuthenticationFilter(TokenService tokenService, UserService userService, TokenEncryptionUtil encryptionUtil) {
         this.tokenService = tokenService;
         this.userService = userService;
+        this.encryptionUtil = encryptionUtil;
     }
 
     @Override
@@ -51,7 +53,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
                 String key = "access_token:" + username;
 
                 if (containsKey(key)) {
-                    String cachedToken = (String) getValue(key);
+                    String cachedToken = encryptionUtil.decryptToken((String) getValue(key));
                     final String tokenValue = accessToken.substring(7);
 
                     if (tokenValue.equals(cachedToken)) {
