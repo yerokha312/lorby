@@ -15,7 +15,6 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -80,7 +79,7 @@ public class AuthController {
     @Operation(
             summary = "Confirmation", description = "Confirm email by clicking the sent link " +
             "({https://crazy-zam.github.io/neo-auth/auth/}confirmation?ct=)",
-            tags = {"authentication", "get"},
+            tags = {"authentication", "put"},
             responses = {
                     @ApiResponse(responseCode = "200", description = "Email confirmed successfully"),
                     @ApiResponse(responseCode = "401", description = "Invalid token exception", content = @Content)
@@ -90,7 +89,7 @@ public class AuthController {
             }
 
     )
-    @GetMapping("/confirmation")
+    @PutMapping("/confirmation")
     public ResponseEntity<String> confirmEmail(@RequestParam("ct") String encryptedToken) {
         authService.confirmEmail(encryptedToken);
         return ResponseEntity.ok("Email is confirmed");
