@@ -69,7 +69,7 @@ public class TokenService {
     public String generateAccessToken(UserEntity entity) {
         String accessToken = generateToken(entity, ACCESS_TOKEN_EXPIRATION, TokenType.ACCESS);
         setValue("access_token:" + entity.getUsername(),
-                accessToken,
+                encryptionUtil.encryptToken(accessToken),
                 ACCESS_TOKEN_EXPIRATION,
                 TimeUnit.MINUTES);
         return accessToken;
@@ -156,7 +156,7 @@ public class TokenService {
         JwtClaimsSet claims = getClaims(now, ACCESS_TOKEN_EXPIRATION, subject, scopes, TokenType.ACCESS);
         String token = encodeToken(claims);
         String key = "access_token:" + username;
-        setValue(key, token, ACCESS_TOKEN_EXPIRATION, TimeUnit.MINUTES);
+        setValue(key, encryptionUtil.encryptToken(token), ACCESS_TOKEN_EXPIRATION, TimeUnit.MINUTES);
         return token;
 
     }
