@@ -59,7 +59,7 @@ public class AuthController {
             }
     )
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
     }
 
@@ -105,7 +105,7 @@ public class AuthController {
             }
     )
     @PostMapping("/resend-confirmation")
-    public ResponseEntity<String> resend(@RequestBody @Valid EmailAndUsername request) {
+    public ResponseEntity<String> resend(@RequestBody EmailAndUsername request) {
         authService.sendConfirmationEmail(request);
         return new ResponseEntity<>("Confirmation link generated, email sent", HttpStatus.OK);
     }
@@ -119,7 +119,7 @@ public class AuthController {
             }
     )
     @PostMapping("/check-presence")
-    public ResponseEntity<Boolean> checkPresence(@RequestBody @Valid EmailAndUsername emailAndUsername) {
+    public ResponseEntity<Boolean> checkPresence(@RequestBody EmailAndUsername emailAndUsername) {
         boolean isPresent = authService.isPresentUsername(emailAndUsername.username());
         if (isPresent) {
             return ResponseEntity.ok(isPresent);
@@ -151,7 +151,7 @@ public class AuthController {
             }
     )
     @PostMapping("/forgot-password")
-    public ResponseEntity<String> findUser(@RequestBody @Valid EmailAndUsername usernameOrEmail) {
+    public ResponseEntity<String> findUser(@RequestBody EmailAndUsername usernameOrEmail) {
         authService.sendResetPasswordEmail(usernameOrEmail);
         return ResponseEntity.ok("Confirmation link generated, email sent");
     }
