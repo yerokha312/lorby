@@ -86,7 +86,7 @@ public class AuthService {
     public void sendConfirmationEmail(EmailAndUsername request) {
         String endpoint = request.endpoint();
         UserEntity entity = userRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(
-                request.username(), request.email()).orElseThrow(() ->
+                request.username(), request.username()).orElseThrow(() ->
                 new UsernameNotFoundException("User not found"));
         if (entity.isEnabled()) {
             throw new UserAlreadyEnabledException("User has already confirmed email address");
@@ -135,7 +135,7 @@ public class AuthService {
 
     public void sendResetPasswordEmail(EmailAndUsername request) {
         UserEntity entity = userRepository.findByUsernameIgnoreCaseOrEmailIgnoreCase(
-                request.username(), request.email()).orElse(null);
+                request.username(), request.username()).orElse(null);
         if (entity == null) {
             return;
         }
